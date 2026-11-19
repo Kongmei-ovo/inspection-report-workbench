@@ -41,9 +41,18 @@ def multipart(url, values=None, files=None):
 
 def verify(url):
     with urlopen(url, timeout=10) as response:
-        assert b"workbench.js" in response.read()
+        page = response.read()
+        assert b"workbench.js" in page and b"workbench-update" in page
     with urlopen(url + "static/workbench.js", timeout=10) as response:
         assert b"/api/sqc" in response.read()
+    try:
+        urlopen(Request(url + "api/update/install", data=b"{}",
+                        headers={"Content-Type": "application/json"}), timeout=10)
+    except HTTPError as error:
+        assert error.code == 403
+        error.close()
+    else:
+        raise AssertionError("Update install accepted a request without a local token")
 
     pdf = BytesIO()
     page = Canvas(pdf, pagesize=(842, 595))

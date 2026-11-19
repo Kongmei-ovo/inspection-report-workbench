@@ -29,3 +29,7 @@ python scripts/smoke.py
 ```
 
 构建脚本为当前平台生成 `packages/` 下的 ZIP。推送 main 或提交 PR 后，GitHub Actions 在三个平台构建和验证。推送 `v*` 标签后，所有构建通过才将 ZIP 自动发布到 GitHub Releases。测试资料由脚本合成。
+
+## 内置更新
+
+从 v0.2.0 起，在工作台左下角点击「检查更新」，可下载并启动对应系统的新版。程序以 GitHub Release 的版本和 SHA-256 校验安装包，并将新版安装到当前用户目录。旧版文件会保留。

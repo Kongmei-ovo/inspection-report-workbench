@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="workbench-update" content="{{ update_token }}">
   <title>验货报告工作台</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/workbench.js" defer></script>
@@ -14,7 +15,13 @@
       <button type="button" class="nav active" data-view="sqc" aria-current="page">SQC 验货报告 <small>Excel</small></button>
       <button type="button" class="nav" data-view="loading">装柜报告 <small>Word</small></button>
     </nav>
-    <div class="local"><span></span> 本机工作区</div>
+    <div class="local">
+      <div><span></span> 本机工作区 · {{ version }}</div>
+      <button type="button" class="update-toggle" id="update-check">检查更新</button>
+      <p id="update-status" role="status"></p>
+      <button type="button" class="button secondary" id="update-install" hidden>下载并打开新版</button>
+      <a id="update-release" href="https://github.com/Kongmei-ovo/inspection-report-workbench/releases" target="_blank" rel="noopener" hidden>打开发布页</a>
+    </div>
   </aside>
   <main>
     <header class="page-header">

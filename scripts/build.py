@@ -1,7 +1,9 @@
 """Build a native portable distribution for the OS running this script."""
 from importlib.metadata import distribution
 from pathlib import Path
+import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -21,7 +23,7 @@ TARGETS = {
 
 def copy_notices(bundle):
     notices = bundle / "third-party-notices"
-    pending = ["Flask", "pdfplumber", "Pillow", "python-docx", "openpyxl", "PyInstaller"]
+    pending = ["Flask", "certifi", "pdfplumber", "Pillow", "python-docx", "openpyxl", "PyInstaller"]
     handled = set()
     while pending:
         name = canonicalize_name(pending.pop())
@@ -51,12 +53,19 @@ def main():
     target = TARGETS.get((platform.system(), platform.machine().lower()))
     if not target:
         sys.exit(f"Unsupported build target: {platform.system()} {platform.machine()}")
+    version = os.environ.get("FHL_BUILD_VERSION", "")
+    if not re.fullmatch(r"v\d+\.\d+\.\d+", version):
+        version = "dev"
+    version_path = ROOT / "build" / "version.txt"
+    version_path.parent.mkdir(exist_ok=True)
+    version_path.write_text(version, encoding="ascii")
     subprocess.run(
         [
             sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
             "--onedir", "--name", NAME,
             "--add-data", "app/templates:templates",
             "--add-data", "app/static:static",
+            "--add-data", "build/version.txt:.",
             "--collect-data", "pdfminer",
             "app/server.py",
         ],

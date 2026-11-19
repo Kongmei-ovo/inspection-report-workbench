@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import PurePosixPath
 import json
 import re
+from secrets import compare_digest, token_urlsafe
 import webbrowser
 from zipfile import BadZipFile, ZipFile
 
@@ -15,9 +16,12 @@ from werkzeug.serving import make_server
 import loading
 import preparation
 import sqc
+import updater
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 120 * 1024 * 1024
+app.config["TRUSTED_HOSTS"] = ["127.0.0.1", "localhost"]
+UPDATE_TOKEN = token_urlsafe(32)
 
 
 def upload(field, suffix):
@@ -50,7 +54,41 @@ def invalid(error):
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    version = updater.CURRENT if updater.version_key(updater.CURRENT) else "开发版"
+    return render_template("index.html", version=version, update_token=UPDATE_TOKEN)
+
+
+@app.errorhandler(updater.UpdateError)
+def update_error(error):
+    return jsonify(error=str(error)), 503
+
+
+@app.get("/api/update")
+def find_update():
+    release = updater.check()
+    return jsonify(
+        current=updater.CURRENT,
+        latest=release.version if release else None,
+        size=release.size if release else None,
+        can_install=bool(updater.FROZEN and updater.version_key(updater.CURRENT)),
+        supported=bool(updater.target()),
+    )
+
+
+@app.post("/api/update/install")
+def install_update():
+    if not compare_digest(request.headers.get("X-Workbench-Update", "").encode(), UPDATE_TOKEN.encode()):
+        return jsonify(error="更新请求未授权，请刷新工作台后重试。"), 403
+    payload = request.get_json(silent=True)
+    requested = payload.get("version") if isinstance(payload, dict) else None
+    if not isinstance(requested, str) or not updater.version_key(requested):
+        return jsonify(error="更新版本无效，请重新检查更新。"), 400
+    release = updater.check()
+    if not release or release.version != requested:
+        return jsonify(error="可用版本已变化，请重新检查更新。"), 409
+    bundle = updater.install(release)
+    updater.launch(bundle)
+    return jsonify(version=release.version, location=str(bundle))
 
 
 @app.post("/api/preparation")
@@ -118,6 +156,14 @@ def main():
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--port", type=int, default=0)
     args = parser.parse_args()
+    if not args.no_browser:
+        newer = updater.newer_installed()
+        if newer:
+            try:
+                updater.launch(newer)
+                return
+            except updater.UpdateError:
+                print("Could not start the updated copy. Starting the current copy instead.", flush=True)
     with make_server("127.0.0.1", args.port, app, threaded=True) as server:
         url = f"http://127.0.0.1:{server.server_port}/"
         print(f"Workbench: {url}", flush=True)

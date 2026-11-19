@@ -20,6 +20,10 @@ body { display: grid; grid-template-columns: 260px minmax(0, 1fr); margin: 0; mi
 .nav small { color: #c1d8df; }
 .local { margin: auto 9px 0; color: #bed3db; font-size: .87rem; }
 .local span { display: inline-block; background: #a6ead0; border-radius: 50%; width: 7px; height: 7px; margin-right: 3px; }
+.update-toggle { border: 0; background: transparent; color: #a6ead0; padding: 7px 0; text-align: left; }
+.local p { color: #e3edf1; overflow-wrap: anywhere; }
+.local .button { margin-top: 8px; }
+.local a { display: block; color: #a6ead0; margin-top: 6px; }
 main { width: min(100%, 1260px); margin-inline: auto; padding: 36px clamp(18px, 4vw, 60px) 48px; }
 .page-header { margin-bottom: 26px; }
 .eyebrow { color: var(--accent); font-size: .85rem; font-weight: 800; letter-spacing: .08em; }
@@ -75,7 +79,7 @@ th { background: var(--page); }
   .brand { margin: 0 0 12px; }
   nav { display: flex; gap: 6px; }
   .nav { gap: 8px; margin: 0; }
-  .local { display: none; }
+  .local { margin-top: 10px; }
   main { padding-top: 22px; }
   .panel { padding: 15px; }
 }

@@ -395,3 +395,63 @@ $("loading-export").onclick = async () => {
 };
 
 renderPhotos();
+
+let availableUpdate;
+const updateCheck = $("update-check");
+const updateInstall = $("update-install");
+const updateRelease = $("update-release");
+
+updateCheck.onclick = async () => {
+  updateCheck.disabled = true;
+  updateInstall.hidden = true;
+  updateRelease.hidden = true;
+  status("update-status", "正在检查…");
+  try {
+    const response = await fetch("/api/update", {cache: "no-store"});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    availableUpdate = data.latest;
+    if (!data.supported) {
+      status("update-status", "当前平台无自动更新包。");
+      updateRelease.hidden = false;
+    } else if (!data.latest) {
+      status("update-status", "没有可用的新版本。");
+    } else {
+      const size = (data.size / 1e6).toFixed(0);
+      status("update-status", `可更新到 ${data.latest} · ${size} MB`);
+      updateInstall.hidden = !data.can_install;
+      updateRelease.hidden = false;
+    }
+  } catch (error) {
+    status("update-status", error.message || "检查更新失败。");
+    updateRelease.hidden = false;
+  } finally {
+    updateCheck.disabled = false;
+  }
+};
+
+updateInstall.onclick = async () => {
+  if (!availableUpdate) return;
+  if (!window.confirm("新版会打开独立窗口。请先导出本页正在编辑的报告，再继续更新。")) return;
+  updateInstall.disabled = true;
+  updateCheck.disabled = true;
+  status("update-status", "正在下载并校验更新包，请保留此窗口…");
+  try {
+    const token = document.querySelector('meta[name="workbench-update"]').content;
+    const response = await fetch("/api/update/install", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-Workbench-Update": token},
+      body: JSON.stringify({version: availableUpdate}),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    status("update-status", `${data.version} 已启动，可以关闭旧窗口。`);
+    updateInstall.hidden = true;
+  } catch (error) {
+    status("update-status", error.message || "安装更新失败。");
+    updateRelease.hidden = false;
+  } finally {
+    updateCheck.disabled = false;
+    updateInstall.disabled = false;
+  }
+};
