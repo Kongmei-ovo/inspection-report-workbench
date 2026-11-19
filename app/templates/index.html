@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>验货报告工作台</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/workbench.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><div>验货报告工作台<small>QUALITY CONTROL</small></div></div>
+    <nav aria-label="报告类型">
+      <button type="button" class="nav active" data-view="sqc" aria-current="page">SQC 验货报告 <small>Excel</small></button>
+      <button type="button" class="nav" data-view="loading">装柜报告 <small>Word</small></button>
+    </nav>
+    <div class="local"><span></span> 本机工作区</div>
+  </aside>
+  <main>
+    <header class="page-header">
+      <p class="eyebrow">FHL · 报告制作</p>
+      <h1 id="title">SQC 验货报告</h1>
+      <p id="description">按 PO 和品名核对备货明细，保留原 Excel 的检验记录与附图。</p>
+    </header>
+    <section class="panel prep">
+      <div class="panel-top">
+        <div><h2>备货单</h2><p>可同时导入多份系统导出的 PDF，跨月也可匹配。</p></div>
+        <label class="button secondary upload">添加 PDF<input id="pdf" type="file" accept=".pdf" multiple></label>
+      </div>
+      <div id="pdf-list" class="chips"></div>
+      <p id="pdf-status" class="status" aria-live="polite">等待导入</p>
+    </section>
+    <section id="sqc" aria-label="SQC 验货报告">
+      <div class="panel">
+        <div class="panel-top">
+          <div><h2>QC 原始报告</h2><p>选择报告查看原有 PO 与备货单的对应结果。</p></div>
+          <label class="button secondary upload">添加 Excel<input id="qc" type="file" accept=".xlsx" multiple></label>
+        </div>
+        <div id="qc-list" class="chips"></div>
+        <p id="qc-status" class="status" aria-live="polite">等待导入</p>
+      </div>
+      <div class="panel" id="qc-review" hidden>
+        <h2 id="qc-title"></h2>
+        <p id="qc-meta"></p>
+        <div id="qc-matches"></div>
+        <div class="actions">
+          <span id="qc-export-status" aria-live="polite"></span>
+          <button type="button" id="qc-export" class="button primary">导出 Excel</button>
+        </div>
+      </div>
+    </section>
+    <section id="loading" aria-label="装柜报告" hidden>
+      <div class="panel">
+        <div class="panel-top"><div><h2>发票与 PO</h2><p>每张发票选择一个 PO，数量使用备货单中的产品数量。</p></div></div>
+        <div class="fields">
+          <label>发票号<select id="invoice"><option value="">请先添加备货单</option></select></label>
+          <label>PO<select id="po"><option value="">请选择发票</option></select></label>
+        </div>
+        <div id="loading-lines"></div>
+      </div>
+      <form class="panel" id="loading-form">
+        <h2>报告字段</h2>
+        <div class="fields">
+          <label class="wide">供应商名称<input name="supplier" required value="FUZHOU BRIGHT WOOD CO.,LTD"></label>
+          <label class="wide">品名<textarea name="products" rows="3" required></textarea></label>
+          <label>数量<input name="quantity" required placeholder="例如 550pcs"></label>
+          <label>检验员<input name="inspector"></label>
+          <label>检验日期<input name="inspection_date" type="date"></label>
+          <label>装柜日期<input name="loading_date" type="date"></label>
+          <label>柜号<input name="container"></label>
+          <label>封条号<input name="seal"></label>
+        </div>
+      </form>
+      <div class="panel">
+        <div class="panel-top">
+          <div><h2>装柜照片</h2><p>分配照片位置，并对照柜号和封条照片填写报告字段。</p></div>
+          <div class="button-group">
+            <label class="button secondary upload">添加照片 / ZIP<input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp,.zip" multiple></label>
+            <label class="button secondary upload">添加文件夹<input id="photo-folder" type="file" webkitdirectory multiple></label>
+          </div>
+        </div>
+        <p id="photo-status" class="status" aria-live="polite">等待导入</p>
+        <details id="photo-gallery" hidden>
+          <summary>浏览已导入照片</summary>
+          <div id="photo-gallery-list" class="photo-grid"></div>
+        </details>
+        <div id="photo-slots" class="photo-grid"></div>
+        <div class="actions">
+          <span id="loading-export-status" aria-live="polite"></span>
+          <button type="button" id="loading-export" class="button primary">导出 Word 草稿</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.DS_Store
+/.pytest_cache/
+/build/
+/dist/
+/packages/
+/*.spec
+/20*/
+/MJ 10月装柜照片/
+/*.pdf
+/*.docx
+/*.xlsx
+/docs/应用方案与需求确认.md
