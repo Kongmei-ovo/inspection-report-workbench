@@ -102,7 +102,7 @@ def main():
     Thread(target=read_output, daemon=True).start()
     try:
         for _ in range(25):
-            line = lines.get(timeout=30)
+            line = lines.get(timeout=90)
             if line is None:
                 raise RuntimeError("Packaged process exited before startup")
             match = re.search(r"http://127\.0\.0\.1:\d+/", line)

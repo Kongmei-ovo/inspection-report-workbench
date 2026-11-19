@@ -1,3 +1,5 @@
 -r requirements.txt
+# Ship the OpenSSL bundled in the wheel, including on macOS Intel.
+--only-binary=cryptography
 PyInstaller>=6.18,<7
 reportlab>=4,<5
