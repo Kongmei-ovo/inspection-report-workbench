@@ -232,7 +232,8 @@ function renderInvoice() {
   const oldPo = $("po").value;
   const entries = state.pdfs.flatMap((pdf) => [...new Set(pdf.rows.map((row) => row.invoice).filter(Boolean))]
     .map((invoice) => [JSON.stringify([pdf.file.name, invoice]), `${invoice} · ${pdf.file.name}`]));
-  options($("invoice"), entries, entries.length ? "请选择发票" : "请先添加备货单", old);
+  const selected = old || (entries.length === 1 ? entries[0][0] : "");
+  options($("invoice"), entries, entries.length ? "请选择发票" : "请先添加备货单", selected);
   if (old !== $("invoice").value) renderPo();
   else if (old) {
     const entries = [...new Set(currentInvoiceRows().map((row) => row.po))].map((po) => [po, "P" + po]);
@@ -243,7 +244,7 @@ function renderInvoice() {
 
 function renderPo() {
   const entries = [...new Set(currentInvoiceRows().map((row) => row.po))].map((po) => [po, "P" + po]);
-  options($("po"), entries, "请选择 PO");
+  options($("po"), entries, "请选择 PO", entries.length === 1 ? entries[0][0] : "");
   fillPo();
 }
 

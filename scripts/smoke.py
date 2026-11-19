@@ -3,6 +3,7 @@ from io import BytesIO
 from pathlib import Path
 from queue import Queue
 from threading import Thread
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 import json
@@ -29,8 +30,11 @@ def multipart(url, values=None, files=None):
         body.extend(data + b"\r\n")
     body.extend(f"--{boundary}--\r\n".encode())
     req = Request(url, bytes(body), {"Content-Type": f"multipart/form-data; boundary={boundary}"})
-    with urlopen(req, timeout=15) as response:
-        return response.read()
+    try:
+        with urlopen(req, timeout=15) as response:
+            return response.read()
+    except HTTPError as error:
+        raise RuntimeError(f"{url}: {error.code} {error.read().decode('utf-8')}") from error
 
 
 def verify(url):
@@ -42,7 +46,7 @@ def verify(url):
     with pymupdf.open() as pdf:
         page = pdf.new_page(width=842, height=595)
         page.insert_text((22, 70), "发票号: MJ260001", fontname="china-s", fontsize=10)
-        for x, text in [(109, "P123456"), (150, "TEST-OAK"), (216, "TEST OAK TABLE"), (425, "70"), (454, "N")]:
+        for x, text in [(109, "P123456"), (162, "TEST-OAK"), (216, "TEST OAK TABLE"), (425, "70"), (454, "N")]:
             page.insert_text((x, 130), text, fontsize=10)
         parsed = json.loads(multipart(url + "api/preparation", files={"file": ("orders.pdf", pdf.tobytes())}))
         row = parsed["rows"][0]
