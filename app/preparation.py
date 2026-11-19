@@ -1,7 +1,8 @@
 """Read the coordinate-based FHL preparation-sheet PDF."""
+from io import BytesIO
 import re
 
-import pymupdf
+import pdfplumber
 
 ORDER = re.compile(r"P(?:O)?\s*([A-Z]*\d{4,})", re.I)
 INVOICE = re.compile(r"发票号\s*[:：]\s*(MJ\d+)", re.I)
@@ -11,18 +12,18 @@ def read_pdf(raw, filename):
     rows = []
     skipped = []
     invoice = ""
-    with pymupdf.open(stream=raw, filetype="pdf") as document:
-        if len(document) > 200:
+    with pdfplumber.open(BytesIO(raw)) as document:
+        if len(document.pages) > 200:
             raise ValueError("单个备货单请控制在 200 页以内。")
-        for index, page in enumerate(document, 1):
-            content = page.get_text()
+        for index, page in enumerate(document.pages, 1):
+            content = page.extract_text()
             match = INVOICE.search(content)
             if match:
                 invoice = match.group(1).upper()
-            words = []
-            for word in page.get_text("words"):
-                box = pymupdf.Rect(word[:4]) * page.rotation_matrix
-                words.append((box.x0 / page.rect.width * 842, box.y0, word[4]))
+            words = [
+                (word["x0"] / page.width * 842, word["top"], word["text"])
+                for word in page.extract_words()
+            ]
             actions = sorted(
                 (x, y, ORDER.fullmatch(value).group(1).upper())
                 for x, y, value in words if 90 <= x <= 138 and ORDER.fullmatch(value)

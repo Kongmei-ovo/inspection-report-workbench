@@ -14,7 +14,9 @@ import sys
 from docx import Document
 from openpyxl import Workbook, load_workbook
 from PIL import Image
-import pymupdf
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfgen.canvas import Canvas
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "InspectionWorkbench"
@@ -43,15 +45,19 @@ def verify(url):
     with urlopen(url + "static/workbench.js", timeout=10) as response:
         assert b"/api/sqc" in response.read()
 
-    with pymupdf.open() as pdf:
-        page = pdf.new_page(width=842, height=595)
-        page.insert_text((22, 70), "发票号: MJ260001", fontname="china-s", fontsize=10)
-        for x, text in [(109, "P123456"), (162, "TEST-OAK"), (216, "TEST OAK TABLE"), (425, "70"), (454, "N")]:
-            page.insert_text((x, 130), text, fontsize=10)
-        parsed = json.loads(multipart(url + "api/preparation", files={"file": ("orders.pdf", pdf.tobytes())}))
-        row = parsed["rows"][0]
-        assert row["invoice"] == "MJ260001", row
-        assert (row["po"], row["product"], row["quantity"]) == ("123456", "TEST OAK TABLE", 70), row
+    pdf = BytesIO()
+    page = Canvas(pdf, pagesize=(842, 595))
+    pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+    page.setFont("STSong-Light", 10)
+    page.drawString(22, 525, "发票号: MJ260001")
+    page.setFont("Helvetica", 10)
+    for x, text in [(109, "P123456"), (162, "TEST-OAK"), (216, "TEST OAK TABLE"), (425, "70"), (454, "N")]:
+        page.drawString(x, 465, text)
+    page.save()
+    parsed = json.loads(multipart(url + "api/preparation", files={"file": ("orders.pdf", pdf.getvalue())}))
+    row = parsed["rows"][0]
+    assert row["invoice"] == "MJ260001", row
+    assert (row["po"], row["product"], row["quantity"]) == ("123456", "TEST OAK TABLE", 70), row
 
     book = Workbook()
     sheet = book.active

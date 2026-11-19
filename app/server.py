@@ -8,6 +8,7 @@ import webbrowser
 from zipfile import BadZipFile, ZipFile
 
 from flask import Flask, jsonify, render_template, request, send_file
+from pdfplumber.utils.exceptions import PdfminerException
 from PIL import UnidentifiedImageError
 from werkzeug.serving import make_server
 
@@ -57,7 +58,7 @@ def read_preparation():
     file = upload("file", ".pdf")
     try:
         return jsonify(preparation.read_pdf(file.read(), file.filename))
-    except RuntimeError as error:
+    except (RuntimeError, PdfminerException) as error:
         raise ValueError("无法打开备货单 PDF，请检查文件。") from error
 
 
